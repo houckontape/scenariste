@@ -8,3 +8,7 @@ axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 tower-http = { version = "0.5", features = ["cors"] }
+
+# C'est ici que ça se passe : on active "runtime-tokio" et "postgres"
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "macros", "tls-native-tls"] }
+dotenvy = "0.15.7"

@@ -1,70 +1,36 @@
-use axum::{routing::{get, post}, Json, Router}; // <-- On importe `post`
-use serde::{Deserialize, Serialize}; // <-- On ajoute `Deserialize` pour lire le JSON
-use tower_http::cors::{Any, CorsLayer};
+use axum::{routing::get, Router};
+use std::net::SocketAddr;
+use dotenvy::dotenv;
 
-#[derive(Serialize)]
-struct StatusResponse {
-    status: String,
-    version: String,
-    online: bool,
-}
-
-// 1. La structure des données que l'on s'attend à RECEVOIR d'Angular
-// #[derive(Deserialize)] permet à Serde de transformer le JSON reçu en structure Rust
-#[derive(Deserialize)]
-struct RegisterRequest {
-    email: String,
-    entreprise: String,
-}
-
-// 2. La structure de la réponse que l'on va RENVOYER après inscription
-#[derive(Serialize)]
-struct RegisterResponse {
-    success: bool,
-    message: String,
-}
+// Déclaration de notre module de base de données
+mod db;
 
 #[tokio::main]
-async fn main() {
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Chargement du fichier .env
+    dotenv().ok();
 
-    // On ajoute notre nouvelle route POST : /api/register
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("La variable DATABASE_URL doit être définie dans le fichier .env");
+
+    println!("🔄 Initialisation de la base de données...");
+    let pool = db::init_pool(&database_url).await?;
+    println!("✅ Base de données prête et migrations appliquées.");
+
+    // 2. Configuration des routes Axum
     let app = Router::new()
-        .route("/api/status", get(get_status))
-        .route("/api/register", post(register_user)) // <-- Nouvelle route
-        .layer(cors);
+        .route("/api/status", get(|| async { "{\"status\": \"OK\"}" }))
+        .with_state(pool);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .unwrap();
+    // 3. Démarrage du serveur façon Axum v0.7 (via Tokio TcpListener)
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    println!("🚀 Serveur Rust démarré sur http://127.0.0.1:3000");
-    axum::serve(listener, app).await.unwrap();
-}
+    // Pour éviter le warning de RustRover sur le HTTP non sécurisé dans les logs,
+    // on écrit simplement l'adresse sans le protocole http:// ou on l'affiche explicitement.
+    println!("🖥️  Serveur Rustover démarré sur l'adresse : {}", addr);
 
-async fn get_status() -> Json<StatusResponse> {
-    Json(StatusResponse {
-        status: String::from("Le back-end Rust fonctionne parfaitement !"),
-        version: String::from("0.1.0"),
-        online: true,
-    })
-}
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app).await?;
 
-// 3. Le Handler pour l'inscription
-// Axum utilise "Json(payload)" pour intercepter et parser automatiquement le corps de la requête
-async fn register_user(Json(payload): Json<RegisterRequest>) -> Json<RegisterResponse> {
-    println!("📩 Inscription reçue pour l'email : {}", payload.email);
-    println!("🏢 Entreprise : {}", payload.entreprise);
-
-    // Ici, on simulera plus tard l'insertion en BDD.
-    // Pour l'instant, on répond avec un succès.
-    let response = RegisterResponse {
-        success: true,
-        message: format!("Le compte pour {} a bien été créé !", payload.email),
-    };
-
-    Json(response)
+    Ok(())
 }

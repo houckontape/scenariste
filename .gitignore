@@ -2,3 +2,4 @@
 /frontend/.angular/
 /frontend/.vscode/
 .idea
+/.env
