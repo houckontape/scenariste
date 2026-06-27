@@ -2,17 +2,21 @@
 
 ### Démarrer la base de données sous docker
 depuis le terminal dans le dossier racine  
-``bash
+```bash
 docker compose up -d
-``  
+``` 
+### Arreter la base de données et vider les volummes
+```bash
+docker compose down -v
+```
 ### Démarer le serveur API   
 depuis le dossier backend  
-``bash
+```bash
 cargo run
-``  
+``` 
 
 ### Démarer le serveur fronetnd
 
-``bash
+```bash
 npm start
-``
+```
