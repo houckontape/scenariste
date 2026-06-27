@@ -1,0 +1,21 @@
+<div class="page-wrapper">
+
+    @if (authStore.isLoading()) {
+        <div class="loading-overlay">Dépôt de vos informations sécurisées sur Rustover...</div>
+    }
+
+    @if (authStore.error(); as errorMsg) {
+        <div class="alert alert-error">
+            ⚠️ {{ errorMsg }}
+        </div>
+    }
+
+    @if (authStore.registerSuccess()) {
+        <div class="alert alert-success">
+            🎉 Inscription réussie ! Vous pouvez maintenant vous connecter.
+        </div>
+    }
+
+    <app-register-form (submitRegister)="onRegisterSubmit($event)"></app-register-form>
+
+</div>
