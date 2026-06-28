@@ -18,7 +18,6 @@ export class RegisterFormComponent {
     // Définition du formulaire réactif avec validations de base
     registerForm = this.fb.nonNullable.group({
         email: ['', [Validators.required, Validators.email]],
-        company: ['', [Validators.required]],
         password: ['', [Validators.required, Validators.minLength(8)]] // Rappel : Notre back exige min 8 caractères !
     });
 

@@ -1,0 +1,194 @@
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(12, 27, 38, 0.7); /* --color-cinema-dark avec opacité */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  height: 80px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Brand - Droite (pour correspondre au login ou garder l'existant si préféré, ici on garde l'existant mais on stylise) */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  order: 1; /* Remis à gauche pour plus de classicisme sur une Home */
+}
+
+.brand-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--color-cinema-mid) 0%, var(--color-cinema-accent) 100%);
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(147, 181, 198, 0.3);
+}
+
+/* Menu Central */
+.nav-menu {
+  display: flex;
+  gap: 2.5rem;
+  order: 2;
+}
+
+.nav-link {
+  color: var(--color-cinema-light);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  opacity: 0.8;
+  transition: all 0.2s;
+
+  &:hover {
+    opacity: 1;
+    color: white;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Actions Gauche */
+.nav-actions {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  order: 3;
+}
+
+.user-email {
+  color: var(--color-cinema-accent);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* On remplace les styles MatButton par des styles custom cohérents */
+.btn-nav-primary {
+  background-color: var(--color-cinema-light);
+  color: var(--color-cinema-dark);
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  &:hover {
+    background-color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.btn-nav-outline {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: white;
+  }
+}
+
+/* Burger Menu */
+.burger-menu {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  order: 4;
+}
+
+.burger-icon {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: white;
+  position: relative;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background: white;
+    left: 0;
+    transition: all 0.3s;
+  }
+
+  &::before { top: -6px; }
+  &::after { bottom: -6px; }
+}
+
+/* Mobile Nav */
+.mobile-nav {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  background: var(--color-cinema-deep);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  border-top: 1px solid var(--glass-border);
+
+  .mobile-link {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--color-cinema-light);
+    text-decoration: none;
+    padding: 0.75rem 0;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--glass-border);
+  }
+}
+
+.btn-primary-mobile {
+  background: var(--color-cinema-light);
+  color: var(--color-cinema-dark);
+  text-align: center;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Visibility Utilities */
+.desktop-only {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.mobile-only {
+  @media (min-width: 769px) {
+    display: none;
+  }
+}

@@ -32,7 +32,7 @@ where
         let token = &auth_header[7..];
 
         // 2. Décoder et valider le JWT
-        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let secret = std::env::var("JWT_SECRET").map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "JWT_SECRET non configuré".to_string()))?;
         let token_data = decode::<Claims>(
             token,
             &DecodingKey::from_secret(secret.as_bytes()),

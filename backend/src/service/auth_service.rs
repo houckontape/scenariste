@@ -3,7 +3,7 @@ use argon2::{password_hash::{PasswordHasher, SaltString}, Argon2, PasswordVerifi
 use sqlx::PgPool;
 use crate::repository::user_repository::UserRepository;
 use crate::repository::profile_repository::ProfileRepository;
-use crate::models::auth::{Claims, AuthResponse};
+use crate::models::auth::{Claims, AuthResponse, UserSummary};
 use jsonwebtoken::{encode, Header, EncodingKey};
 use chrono::{Utc, Duration};
 use crate::models::user::{User, UserRole};
@@ -100,7 +100,7 @@ impl AuthService {
             .map_err(|_| AuthServiceError::InvalidCredentials)?;
 
         // 3. Générer le JWT
-        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let secret = std::env::var("JWT_SECRET").map_err(|_| AuthServiceError::TokenError)?;
         let expiration = Utc::now()
             .checked_add_signed(Duration::days(1))
             .expect("valid timestamp")
@@ -121,7 +121,11 @@ impl AuthService {
 
         Ok(AuthResponse {
             token,
-            token_type: "Bearer".to_string(),
+            user: UserSummary {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            },
         })
     }
 }

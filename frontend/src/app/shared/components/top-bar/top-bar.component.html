@@ -1,0 +1,51 @@
+<header class="top-bar">
+  <nav class="nav-container">
+    <!-- Actions Gauche -->
+    <div class="nav-actions">
+      @if (!authStore.isAuthenticated()) {
+        <a routerLink="/auth/register" class="btn-nav-primary">Essai Gratuit</a>
+        <a routerLink="/auth/login" class="btn-nav-outline">Connexion</a>
+      } @else {
+        <a routerLink="/dashboard" class="btn-nav-primary">Dashboard</a>
+        <button (click)="logout()" class="btn-nav-outline">Déconnexion</button>
+      }
+    </div>
+
+    <!-- Menu Central (Desktop) -->
+    <div class="nav-menu desktop-only">
+      <a routerLink="/home" class="nav-link">Accueil</a>
+      <a routerLink="/products" class="nav-link">Nos Produits</a>
+      <a routerLink="/about" class="nav-link">Qui sommes-nous ?</a>
+      <a routerLink="/contact" class="nav-link">Contact</a>
+    </div>
+
+    <!-- Logo/Nom Droite -->
+    <div class="nav-brand">
+      <span class="brand-name">Scenariste</span>
+      <div class="brand-logo"></div>
+    </div>
+
+    <!-- Burger Button (Mobile) -->
+    <button class="burger-menu mobile-only" (click)="toggleMenu()" [attr.aria-expanded]="isMenuOpen()">
+      <span class="burger-icon"></span>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  @if (isMenuOpen()) {
+    <div class="mobile-nav mobile-only">
+      <a routerLink="/home" (click)="toggleMenu()" class="mobile-link">Accueil</a>
+      <a routerLink="/products" (click)="toggleMenu()" class="mobile-link">Nos Produits</a>
+      <a routerLink="/about" (click)="toggleMenu()" class="mobile-link">Qui sommes-nous ?</a>
+      <a routerLink="/contact" (click)="toggleMenu()" class="mobile-link">Contact</a>
+      <hr>
+      @if (!authStore.isAuthenticated()) {
+        <a routerLink="/auth/login" (click)="toggleMenu()" class="mobile-link">Connexion</a>
+        <a routerLink="/auth/register" (click)="toggleMenu()" class="mobile-link btn-primary-mobile">Essai Gratuit</a>
+      } @else {
+        <div class="mobile-link user-info">{{ authStore.currentUser()?.email }}</div>
+        <a href="javascript:void(0)" (click)="logout(); toggleMenu()" class="mobile-link">Déconnexion</a>
+      }
+    </div>
+  }
+</header>
