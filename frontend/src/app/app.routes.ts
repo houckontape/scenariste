@@ -3,8 +3,12 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: 'auth/register',
+        redirectTo: 'home',
         pathMatch: 'full'
+    },
+    {
+        path: 'home',
+        loadChildren: () => import('./feature/home/home.routes').then(m => m.HOME_ROUTES)
     },
     {
         path: 'auth',
@@ -13,6 +17,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: 'auth/register' // Redirection générique pour le moment
+        redirectTo: 'home' // Redirection générique pour le moment
     }
 ];

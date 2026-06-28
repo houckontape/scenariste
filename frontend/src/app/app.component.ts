@@ -4,20 +4,15 @@ import { RouterOutlet } from '@angular/router';
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [RouterOutlet], // On importe le RouterOutlet pour activer l'affichage des routes
+    imports: [RouterOutlet],
     template: `
-        <main class="app-container">
-            <router-outlet></router-outlet>
-        </main>
+        <router-outlet></router-outlet>
     `,
     styles: [`
-    .app-container {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    :host {
+      display: block;
       min-height: 100vh;
-      background-color: #f9fafb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background-color: #ffffff;
     }
   `]
 })

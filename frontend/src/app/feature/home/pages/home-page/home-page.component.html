@@ -1,0 +1,45 @@
+<app-top-bar></app-top-bar>
+
+<main class="home-container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Donnez vie à vos histoires, <br>
+        <span class="gradient-text">du synopsis à la scène</span>
+      </h1>
+      <p class="hero-subtitle">
+        L'outil tout-en-un pour les scénaristes modernes. Gérez vos projets, 
+        visualisez vos intrigues et écrivez vos scènes dans une interface fluide et inspirante.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/auth/register" class="btn btn-hero-primary">Commencer gratuitement</a>
+        <a href="#features" class="btn btn-hero-outline">Voir les fonctionnalités</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="section-header">
+      <h2 class="section-title">Tout ce dont vous avez besoin pour créer</h2>
+      <p class="section-subtitle">Des outils puissants conçus pour libérer votre créativité.</p>
+    </div>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+        <div class="feature-card">
+          <div class="feature-icon">{{ feature.icon }}</div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<footer class="home-footer">
+  <div class="footer-content">
+    <p>&copy; 2026 Scenariste - Rustover SaaS. Tous droits réservés.</p>
+  </div>
+</footer>
