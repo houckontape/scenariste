@@ -1,51 +1,178 @@
-use axum::{extract::State, Json, http::StatusCode};
-use argon2::{
-    password_hash::{PasswordHash, PasswordHasher, SaltString},
-    Argon2
+use axum::{
+    extract::{State, FromRequestParts},
+    http::{StatusCode, request::Parts, header::{AUTHORIZATION}},
+    response::IntoResponse,
+    Json,
 };
-use crate::db::DbPool;
-use crate::models::user::RegisterInput;
+use sqlx::PgPool;
+use jsonwebtoken::{decode, DecodingKey, Validation};
+use crate::models::auth::{Claims, AuthResponse, LoginInput};
+use crate::models::user::{RegisterInput, UserWithProfile, Profile, UpdateProfileInput, UserRole};
+use crate::service::auth_service::{AuthService, AuthServiceError};
 
-/// Handler pour l'inscription d'un nouvel utilisateur
-pub async fn register(
-    State(pool): State<DbPool>,
-    Json(payload): Json<RegisterInput>,
-) -> Result<(StatusCode, Json<String>), (StatusCode, String)> {
+// Extracteur JWT : FromRequestParts permet d'injecter Claims dans n'importe quel handler protégé
+#[axum::async_trait]
+impl<S> FromRequestParts<S> for Claims
+where
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, String);
 
-    // 1. Validation basique
-    if payload.password.len() < 8 {
-        return Err((StatusCode::BAD_REQUEST, "Le mot de passe doit faire au moins 8 caractères".to_string()));
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        // 1. Extraire le header Authorization
+        let auth_header = parts.headers
+            .get(AUTHORIZATION)
+            .and_then(|h| h.to_str().ok())
+            .ok_or((StatusCode::UNAUTHORIZED, "Token manquant".to_string()))?;
+
+        if !auth_header.starts_with("Bearer ") {
+            return Err((StatusCode::UNAUTHORIZED, "Format de token invalide".to_string()));
+        }
+
+        let token = &auth_header[7..];
+
+        // 2. Décoder et valider le JWT
+        let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let token_data = decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(secret.as_bytes()),
+            &Validation::default(),
+        )
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Token invalide ou expiré".to_string()))?;
+
+        Ok(token_data.claims)
     }
+}
 
-    // 2. Hachage du mot de passe
-    // Nous générons un sel basique à partir des octets de l'email pour contourner le besoin d'OsRng direct,
-    // ou nous laissons Argon2 utiliser ses valeurs par défaut de manière sécurisée.
-    let salt = SaltString::b64_encode(payload.email.as_bytes())
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Erreur de génération du sel".to_string()))?;
+pub async fn login(
+    State(pool): State<PgPool>,
+    Json(payload): Json<LoginInput>,
+) -> Result<Json<AuthResponse>, (StatusCode, String)> {
+    match AuthService::login(&pool, &payload.email, &payload.password).await {
+        Ok(auth_response) => Ok(Json(auth_response)),
+        Err(err) => match err {
+            AuthServiceError::InvalidCredentials =>
+                Err((StatusCode::UNAUTHORIZED, "Email ou mot de passe incorrect".to_string())),
+            AuthServiceError::DatabaseError(e) =>
+                Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Erreur serveur : {}", e))),
+            _ => Err((StatusCode::INTERNAL_SERVER_ERROR, "Erreur interne".to_string())),
+        }
+    }
+}
 
-    let argon2 = Argon2::default();
+pub async fn protected_route(claims: Claims) -> impl IntoResponse {
+    (StatusCode::OK, format!("Succès ! Bienvenue utilisateur {}, votre rôle est {:?}", claims.sub, claims.role))
+}
 
-    let password_hash = argon2
-        .hash_password(payload.password.as_bytes(), &salt)
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Erreur lors du hachage sécurisé".to_string()))?
-        .to_string();
+pub async fn register(
+    State(pool): State<PgPool>,
+    Json(payload): Json<RegisterInput>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
 
-    // 3. Insertion sécurisée dans PostgreSQL via SQLx
-    sqlx::query!(
-        "INSERT INTO users (email, company, password_hash) VALUES ($1, $2, $3)",
-        payload.email,
-        payload.company,
-        password_hash
+    match AuthService::register_user(&pool, &payload.email, &payload.password).await {
+        Ok(user_id) => {
+            Ok((StatusCode::CREATED, Json(serde_json::json!({
+                "message": "Utilisateur et profil créés avec succès !",
+                "user_id": user_id
+            }))))
+        },
+        Err(err) => match err {
+            AuthServiceError::PasswordTooShort =>
+                Err((StatusCode::BAD_REQUEST, "Le mot de passe doit faire au moins 8 caractères.".to_string())),
+            AuthServiceError::EmailConflict =>
+                Err((StatusCode::CONFLICT, "Cet email est déjà utilisé.".to_string())),
+            AuthServiceError::EntropyError =>
+                Err((StatusCode::INTERNAL_SERVER_ERROR, "Erreur de sécurité interne (Chiffrement)".to_string())),
+            AuthServiceError::DatabaseError(e) =>
+                Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Erreur serveur interne : {}", e))),
+            _ => Err((StatusCode::INTERNAL_SERVER_ERROR, "Erreur interne".to_string())),
+        }
+    }
+}
+
+pub async fn get_current_user(
+    State(pool): State<PgPool>,
+) -> Result<Json<UserWithProfile>, (StatusCode, String)> {
+    // Pour l'instant, on simule un ID utilisateur en attendant JWT.
+    // On va chercher le premier utilisateur de la base pour la démo.
+    let user_row = sqlx::query!(
+        r#"
+        SELECT
+            u.id as user_id, u.email, u.role as "role: UserRole", u.is_active,
+            p.id as "profile_id?", p.first_name, p.last_name, p.avatar_url, p.bio, p.address,
+            p.created_at as "p_created_at?", p.updated_at as "p_updated_at?"
+        FROM users u
+        LEFT JOIN profiles p ON u.id = p.user_id
+        LIMIT 1
+        "#
     )
-        .execute(&pool)
-        .await
-        .map_err(|e| {
-            if e.to_string().contains("unique constraint") {
-                (StatusCode::CONFLICT, "Cet email est déjà utilisé".to_string())
-            } else {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Erreur base de données".to_string())
-            }
-        })?;
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Ok((StatusCode::CREATED, Json("Utilisateur créé avec succès".to_string())))
+    if let Some(row) = user_row {
+        let profile = if let (Some(id), Some(created_at), Some(updated_at)) = (row.profile_id, row.p_created_at, row.p_updated_at) {
+            Some(Profile {
+                id,
+                user_id: row.user_id,
+                first_name: row.first_name,
+                last_name: row.last_name,
+                avatar_url: row.avatar_url,
+                bio: row.bio,
+                address: row.address,
+                created_at,
+                updated_at,
+            })
+        } else {
+            None
+        };
+
+        Ok(Json(UserWithProfile {
+            id: row.user_id,
+            email: row.email,
+            role: row.role,
+            is_active: row.is_active,
+            profile,
+        }))
+    } else {
+        Err((StatusCode::NOT_FOUND, "Utilisateur non trouvé".to_string()))
+    }
+}
+
+pub async fn upsert_profile(
+    State(pool): State<PgPool>,
+    Json(payload): Json<UpdateProfileInput>,
+) -> Result<Json<Profile>, (StatusCode, String)> {
+    // Simuler un user_id (on prend le premier user)
+    let user_id = sqlx::query_scalar!("SELECT id FROM users LIMIT 1")
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let profile = sqlx::query_as!(
+        Profile,
+        r#"
+        INSERT INTO profiles (user_id, first_name, last_name, avatar_url, bio, address)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (user_id) DO UPDATE SET
+            first_name = EXCLUDED.first_name,
+            last_name = EXCLUDED.last_name,
+            avatar_url = EXCLUDED.avatar_url,
+            bio = EXCLUDED.bio,
+            address = EXCLUDED.address,
+            updated_at = NOW()
+        RETURNING id, user_id, first_name, last_name, avatar_url, bio, address, created_at, updated_at
+        "#,
+        user_id,
+        payload.first_name,
+        payload.last_name,
+        payload.avatar_url,
+        payload.bio,
+        payload.address
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(profile))
 }

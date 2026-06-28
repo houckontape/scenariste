@@ -6,7 +6,10 @@ use axum::http::{Method, HeaderValue};
 
 mod db;
 mod models;
-mod handler; // 🔴 CORRECTION 2 : "handler" au singulier pour correspondre à votre dossier !
+mod handler;
+mod service;
+mod repository;
+// 🔴 CORRECTION 2 : "handler" au singulier pour correspondre à votre dossier !
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,8 +31,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configuration des routes Axum
     let app = Router::new()
         .route("/api/status", get(|| async { "{\"status\": \"OK\"}" }))
-        // 🔴 CORRECTION 3 : Utilisation de handler::auth au singulier
         .route("/api/auth/register", post(handler::auth::register))
+        .route("/api/auth/login", post(handler::auth::login))
+        .route("/api/auth/protected", get(handler::auth::protected_route))
+        .route("/api/auth/me", get(handler::auth::get_current_user))
+        .route("/api/auth/profile", post(handler::auth::upsert_profile))
+        .route("/api/articles", get(handler::article::list_articles).post(handler::article::create_article))
         .layer(cors)
         .with_state(pool);
 

@@ -1,13 +1,25 @@
-use chrono::{DateTime, Utc};
+// backend/src/models/article.rs
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct Article {
-    pub id: i32,
+    pub id: Uuid,
+    pub project_id: Uuid,
+    pub author_id: Option<Uuid>,
     pub title: String,
-    pub slug: String,
-    pub content: String, // Contiendra le Markdown brut
-    pub author_name: String,
-    pub published_at: DateTime<Utc>,
+    pub content: String,
+    pub tags: Option<Vec<String>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateArticleInput {
+    pub project_id: Uuid, // Requis par la table brainstorming_notes
+    pub title: String,
+    pub content: String,
+    pub tags: Vec<String>,
 }
