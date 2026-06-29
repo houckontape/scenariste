@@ -25,6 +25,34 @@ export const routes: Routes = [
         children: [
             { path: '', redirectTo: 'workspace', pathMatch: 'full' },
             { path: 'workspace', component: WorkspaceHomeComponent },
+            { 
+                path: 'projects', 
+                children: [
+                    { path: '', redirectTo: '/dashboard/workspace', pathMatch: 'full' },
+                    { 
+                        path: 'create', 
+                        loadComponent: () => import('./feature/project/pages/project-create/project-create.component').then(m => m.ProjectCreateComponent) 
+                    },
+                    {
+                        path: ':id',
+                        children: [
+                            { path: '', redirectTo: 'notes', pathMatch: 'full' },
+                            { 
+                                path: 'notes', 
+                                loadComponent: () => import('./feature/project/pages/project-notes/project-notes.component').then(m => m.ProjectNotesComponent) 
+                            },
+                            { 
+                                path: 'characters', 
+                                loadComponent: () => import('./feature/project/pages/project-characters/project-characters.component').then(m => m.ProjectCharactersComponent) 
+                            },
+                            { 
+                                path: 'structure', 
+                                loadComponent: () => import('./feature/project/pages/project-structure/project-structure.component').then(m => m.ProjectStructureComponent) 
+                            }
+                        ]
+                    }
+                ]
+            },
             { path: 'profile', component: ProfileComponent },
             // Les autres routes enfants (projects, brainstorming) pourront être ajoutées ici
         ]

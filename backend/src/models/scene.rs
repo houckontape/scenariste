@@ -54,6 +54,7 @@ pub struct Scene {
     pub time_of_day: SceneTimeOfDay,
     pub content: String,
     pub note: Option<String>,
+    pub shooting_technique_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -68,6 +69,7 @@ pub struct CreateSceneInput {
     pub time_of_day: SceneTimeOfDay,
     pub content: Option<String>,
     pub note: Option<String>,
+    pub shooting_technique_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -79,4 +81,5 @@ pub struct UpdateSceneInput {
     pub time_of_day: Option<SceneTimeOfDay>,
     pub content: Option<String>,
     pub note: Option<String>,
+    pub shooting_technique_id: Option<Uuid>,
 }

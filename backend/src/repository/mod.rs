@@ -6,3 +6,5 @@ pub mod brainstorming_repository;
 pub mod project_member_repository;
 pub mod project_synopsis_repository;
 pub mod project_act_repository;
+pub mod shooting_technique_repository;
+pub mod character_bible_repository;

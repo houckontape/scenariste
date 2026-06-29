@@ -14,7 +14,7 @@ impl SceneRepository {
                 s.setting as "setting: SceneSetting", 
                 s.location, 
                 s.time_of_day as "time_of_day: SceneTimeOfDay", 
-                s.content, s.note, s.created_at, s.updated_at
+                s.content, s.note, s.shooting_technique_id, s.created_at, s.updated_at
             FROM scenes s
             JOIN project_members pm ON s.project_id = pm.project_id
             WHERE s.project_id = $1 AND pm.user_id = $2
@@ -38,7 +38,7 @@ impl SceneRepository {
                 s.setting as "setting: SceneSetting", 
                 s.location, 
                 s.time_of_day as "time_of_day: SceneTimeOfDay", 
-                s.content, s.note, s.created_at, s.updated_at
+                s.content, s.note, s.shooting_technique_id, s.created_at, s.updated_at
             FROM scenes s
             JOIN project_members pm ON s.project_id = pm.project_id
             WHERE s.id = $1 AND pm.user_id = $2
@@ -73,14 +73,14 @@ impl SceneRepository {
         let scene = sqlx::query_as!(
             Scene,
             r#"
-            INSERT INTO scenes (act_id, project_id, position, setting, location, time_of_day, content, note)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO scenes (act_id, project_id, position, setting, location, time_of_day, content, note, shooting_technique_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING 
                 id, act_id, project_id, position, 
                 setting as "setting: SceneSetting", 
                 location, 
                 time_of_day as "time_of_day: SceneTimeOfDay", 
-                content, note, created_at, updated_at
+                content, note, shooting_technique_id, created_at, updated_at
             "#,
             input.act_id,
             input.project_id,
@@ -89,7 +89,8 @@ impl SceneRepository {
             input.location,
             input.time_of_day as SceneTimeOfDay,
             input.content.unwrap_or_default(),
-            input.note
+            input.note,
+            input.shooting_technique_id
         )
         .fetch_one(pool)
         .await?;
@@ -110,17 +111,18 @@ impl SceneRepository {
                 time_of_day = COALESCE($5, time_of_day),
                 content = COALESCE($6, content),
                 note = COALESCE($7, note),
+                shooting_technique_id = COALESCE($8, shooting_technique_id),
                 updated_at = NOW()
-            WHERE id = $8 AND project_id IN (
+            WHERE id = $9 AND project_id IN (
                 SELECT project_id FROM project_members 
-                WHERE user_id = $9 AND role IN ('owner', 'write')
+                WHERE user_id = $10 AND role IN ('owner', 'write')
             )
             RETURNING 
                 id, act_id, project_id, position, 
                 setting as "setting: SceneSetting", 
                 location, 
                 time_of_day as "time_of_day: SceneTimeOfDay", 
-                content, note, created_at, updated_at
+                content, note, shooting_technique_id, created_at, updated_at
             "#,
             input.act_id,
             input.position,
@@ -129,6 +131,7 @@ impl SceneRepository {
             input.time_of_day as Option<SceneTimeOfDay>,
             input.content,
             input.note,
+            input.shooting_technique_id,
             scene_id,
             user_id
         )

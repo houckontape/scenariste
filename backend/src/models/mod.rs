@@ -7,3 +7,5 @@ pub mod brainstorming;
 pub mod project_member;
 pub mod project_synopsis;
 pub mod project_act;
+pub mod shooting_technique;
+pub mod character_bible;

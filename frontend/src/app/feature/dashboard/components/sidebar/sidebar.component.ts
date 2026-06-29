@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthStore } from '../../../auth/store/auth.store';
-import { RouterModule } from '@angular/router';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,8 +13,30 @@ import { RouterModule } from '@angular/router';
 })
 export class SidebarComponent {
   private readonly authStore = inject(AuthStore);
+  private readonly router = inject(Router);
   
   readonly currentUser = this.authStore.currentUser;
+  readonly currentProjectId = signal<string | null>(null);
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.updateCurrentProjectId();
+    });
+    // Initial check
+    this.updateCurrentProjectId();
+  }
+
+  private updateCurrentProjectId(): void {
+    const urlParts = this.router.url.split('/');
+    const projectsIndex = urlParts.indexOf('projects');
+    if (projectsIndex !== -1 && urlParts[projectsIndex + 1] && urlParts[projectsIndex + 1] !== 'create') {
+      this.currentProjectId.set(urlParts[projectsIndex + 1]);
+    } else {
+      this.currentProjectId.set(null);
+    }
+  }
 
   get userRoleDisplay(): string {
     const role = this.currentUser()?.role;

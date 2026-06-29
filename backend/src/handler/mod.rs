@@ -3,6 +3,7 @@ pub mod article;
 pub mod project;
 pub mod scene;
 pub mod brainstorming;
+pub mod character_bible;
 pub mod project_member;
 pub mod project_synopsis;
 pub mod project_act;

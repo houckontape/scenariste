@@ -58,11 +58,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/projects/:id/notes", get(handler::brainstorming::list_notes))
         .route("/api/notes", post(handler::brainstorming::create_note))
         .route("/api/notes/:id", get(handler::brainstorming::get_note).patch(handler::brainstorming::update_note).delete(handler::brainstorming::delete_note))
+        .route("/api/projects/:id/characters", get(handler::character_bible::list_characters))
+        .route("/api/characters", post(handler::character_bible::create_character))
+        .route("/api/characters/:id", get(handler::character_bible::get_character).patch(handler::character_bible::update_character).delete(handler::character_bible::delete_character))
         .route("/api/projects/:id/members", get(handler::project_member::list_members).post(handler::project_member::add_member))
         .route("/api/projects/:id/members/:user_id", patch(handler::project_member::update_member_role).delete(handler::project_member::remove_member))
         .route("/api/projects/:id/synopsis", get(handler::project_synopsis::get_synopsis).post(handler::project_synopsis::upsert_synopsis).delete(handler::project_synopsis::delete_synopsis))
         .route("/api/metadata/scene-settings", get(handler::metadata::get_scene_settings))
         .route("/api/metadata/scene-times-of-day", get(handler::metadata::get_scene_times_of_day))
+        .route("/api/metadata/shooting-techniques", get(handler::metadata::get_shooting_techniques))
         .layer(cors)
         .with_state(pool);
 

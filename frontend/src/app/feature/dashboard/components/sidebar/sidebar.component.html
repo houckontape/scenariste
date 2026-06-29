@@ -30,12 +30,32 @@
           <span>Mes Projets</span>
         </a>
       </li>
-      <li>
-        <a routerLink="/dashboard/brainstorming" routerLinkActive="active" class="nav-link">
-          <i class="fa-solid fa-pen-to-square w-6"></i>
-          <span>Notes & Brainstorming</span>
-        </a>
-      </li>
+
+      @if (currentProjectId()) {
+        <li class="separator-li">
+          <div class="separator-line"></div>
+          <span class="text-[10px] uppercase font-bold text-cinema-accent px-4 py-2 block">Projet Actuel</span>
+        </li>
+        <li>
+          <a [routerLink]="['/dashboard/projects', currentProjectId(), 'notes']" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-pen-to-square w-6 text-blue-400"></i>
+            <span>Notes & Brainstorming</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/dashboard/projects', currentProjectId(), 'characters']" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-users-rectangle w-6 text-indigo-400"></i>
+            <span>Bible Personnages</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/dashboard/projects', currentProjectId(), 'structure']" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-layer-group w-6 text-amber-400"></i>
+            <span>Structure (Actes)</span>
+          </a>
+        </li>
+      }
+
       <li class="separator-li">
         <div class="separator-line"></div>
       </li>
