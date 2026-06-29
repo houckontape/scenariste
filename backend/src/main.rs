@@ -1,4 +1,4 @@
-use axum::{routing::{get, post}, Router}; // 🔴 CORRECTION 1 : Ajout de ", post" ici
+use axum::{routing::{get, post, patch}, Router};
 use std::net::SocketAddr;
 use dotenvy::dotenv;
 use tower_http::cors::CorsLayer;
@@ -47,6 +47,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/auth/me", get(handler::auth::get_current_user))
         .route("/api/auth/profile", post(handler::auth::upsert_profile))
         .route("/api/articles", get(handler::article::list_articles).post(handler::article::create_article))
+        .route("/api/projects", get(handler::project::list_projects).post(handler::project::create_project))
+        .route("/api/projects/:id", get(handler::project::get_project).patch(handler::project::update_project).delete(handler::project::delete_project))
+        .route("/api/projects/:id/acts", get(handler::project_act::list_acts))
+        .route("/api/acts", post(handler::project_act::create_act))
+        .route("/api/acts/:id", get(handler::project_act::get_act).patch(handler::project_act::update_act).delete(handler::project_act::delete_act))
+        .route("/api/projects/:id/scenes", get(handler::scene::list_scenes))
+        .route("/api/scenes", post(handler::scene::create_scene))
+        .route("/api/scenes/:id", get(handler::scene::get_scene).patch(handler::scene::update_scene).delete(handler::scene::delete_scene))
+        .route("/api/projects/:id/notes", get(handler::brainstorming::list_notes))
+        .route("/api/notes", post(handler::brainstorming::create_note))
+        .route("/api/notes/:id", get(handler::brainstorming::get_note).patch(handler::brainstorming::update_note).delete(handler::brainstorming::delete_note))
+        .route("/api/projects/:id/members", get(handler::project_member::list_members).post(handler::project_member::add_member))
+        .route("/api/projects/:id/members/:user_id", patch(handler::project_member::update_member_role).delete(handler::project_member::remove_member))
+        .route("/api/projects/:id/synopsis", get(handler::project_synopsis::get_synopsis).post(handler::project_synopsis::upsert_synopsis).delete(handler::project_synopsis::delete_synopsis))
+        .route("/api/metadata/scene-settings", get(handler::metadata::get_scene_settings))
+        .route("/api/metadata/scene-times-of-day", get(handler::metadata::get_scene_times_of_day))
         .layer(cors)
         .with_state(pool);
 
